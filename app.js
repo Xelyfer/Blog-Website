@@ -1,5 +1,6 @@
 const express = require("express");
 const ejs = require("ejs");
+const _ = require("lodash");
 const port = process.env.port || 3000;
 
 const homeStartingContent =
@@ -15,6 +16,50 @@ app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
+
+let posts = [];
+
+app.get("/", function (req, res) {
+  res.render("home", { titleContent: homeStartingContent, posts: posts });
+});
+
+app.get("/about", function (req, res) {
+  res.render("about", { titleContent: aboutContent });
+});
+
+app.get("/contact", function (req, res) {
+  res.render("contact", { titleContent: contactContent });
+});
+
+app.get("/compose", function (req, res) {
+  res.render("compose");
+});
+
+app.get("/posts/:postName", function (req, res) {
+  const requestedTitle = _.lowerCase(req.params.postName);
+
+  posts.forEach(function (post) {
+    const storedTitle = _.lowerCase(post.composeTitle);
+
+    if (storedTitle === requestedTitle) {
+      res.render("post", {
+        postTitle: post.composeTitle,
+        postContent: post.composeContent,
+      });
+    }
+  });
+});
+
+app.post("/compose", function (req, res) {
+  const post = {
+    composeTitle: req.body.composeTitle,
+    composeContent: req.body.composeContent,
+  };
+
+  posts.push(post);
+
+  res.redirect("/");
+});
 
 app.listen(port, function () {
   console.log("Server started on port 3000");
